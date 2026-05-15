@@ -380,9 +380,7 @@
     </footer>
 
     <script>
-        // Datos completos de Fidélitas
         const datos = [
-            // BACHILLERATOS INGENIERÍAS
             { programa: 'Ingenieria Ambiental', nivel: 'Bachillerato', cursos: 48, duracion: '9 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 9391270 },
             { programa: 'Ingenieria Civil', nivel: 'Bachillerato', cursos: 59, duracion: '11 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 10793641 },
             { programa: 'Ingenieria Electrica', nivel: 'Bachillerato', cursos: 47, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 8979428 },
@@ -392,14 +390,10 @@
             { programa: 'Ingenieria Industrial', nivel: 'Bachillerato', cursos: 45, duracion: '9 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 9117846 },
             { programa: 'Arquitectura Sostenible', nivel: 'Bachillerato', cursos: 62, duracion: '15 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 13075338 },
             { programa: 'Ingenieria Mecatronica', nivel: 'Bachillerato', cursos: 47, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 9120928 },
-            
-            // BACHILLERATOS COMPUTACIÓN
             { programa: 'Ingenieria en Ciencias de Datos', nivel: 'Bachillerato', cursos: 40, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 7929052 },
             { programa: 'Ingenieria en Desarrollo de Software', nivel: 'Bachillerato', cursos: 39, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 7565186 },
             { programa: 'Ingenieria en Seguridad informatica o ciberseguridad', nivel: 'Bachillerato', cursos: 43, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 8153124 },
             { programa: 'Ingenieria en Sistemas de computacion', nivel: 'Bachillerato', cursos: 38, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 7478552 },
-            
-            // BACHILLERATOS CIENCIAS SOCIALES
             { programa: 'Administracion de Negocios', nivel: 'Bachillerato', cursos: 40, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 6979223 },
             { programa: 'Contaduria Publica', nivel: 'Bachillerato', cursos: 39, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 6847723 },
             { programa: 'Economia', nivel: 'Bachillerato', cursos: 40, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 7638713 },
@@ -410,8 +404,6 @@
             { programa: 'Diseño Publicitario', nivel: 'Bachillerato', cursos: 39, duracion: '9 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 7572285 },
             { programa: 'Psicologia', nivel: 'Bachillerato', cursos: 44, duracion: '9 cuatrimestres', modalidad: 'Virtual', facultad: 'Sociales', costo: 7199616 },
             { programa: 'Publicidad', nivel: 'Bachillerato', cursos: 42, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 7174785 },
-            
-            // LICENCIATURAS INGENIERÍAS
             { programa: 'Arquitectura con enfasis en sostenibilidad', nivel: 'Licenciatura', cursos: 58, duracion: '15 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 13075338 },
             { programa: 'Ingenieria Civil', nivel: 'Licenciatura', cursos: 55, duracion: '11 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 10793641 },
             { programa: 'INGENIERÍA INDUSTRIAL CON ÉNFASIS EN CADENA DE SUMINISTROS Y LOGÍSTICA', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 1824928 },
@@ -425,13 +417,9 @@
             { programa: 'INGENIERÍA INDUSTRIAL', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 1784000 },
             { programa: 'INGENIERÍA INDUSTRIAL CON ÉNFASIS EN TRANSFORMACIÓN ORGANIZACIONAL', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 1698357 },
             { programa: 'INGENIERÍA MECATRÓNICA', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 1733928 },
-            
-            // LICENCIATURAS COMPUTACIÓN
             { programa: 'INGENIERÍA EN DESARROLLO DE SOFTWARE CON ÉNFASIS EN DESARROLLO MÓVIL', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 1905000 },
             { programa: 'INGENIERÍA EN SISTEMAS DE COMPUTACIÓN CON ÉNFASIS EN CALIDAD DEL SOFTWARE', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 1815000 },
             { programa: 'INGENIERÍA EN SISTEMAS DE COMPUTACIÓN', nivel: 'Licenciatura', cursos: 9, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 1659000 },
-            
-            // LICENCIATURAS CIENCIAS SOCIALES
             { programa: 'ADMINISTRACIÓN DE NEGOCIOS CON ÉNFASIS EN CAPITAL HUMANO', nivel: 'Licenciatura', cursos: 9, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1550428 },
             { programa: 'ADMINISTRACIÓN DE NEGOCIOS CON ÉNFASIS EN FINANZAS Y BANCA', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1670500 },
             { programa: 'ADMINISTRACIÓN DE NEGOCIOS CON ÉNFASIS EN MERCADEO', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1702500 },
@@ -467,7 +455,16 @@
             return datos.filter(item => {
                 const nivelOk = nivel === 'TODOS' || item.nivel === nivel;
                 const facultadOk = facultad === 'TODOS' || item.facultad === facultad;
-                const modalidadOk = modalidad === 'TODOS' || item.modalidad.includes(modalidad);
+                
+                let modalidadOk = true;
+                if (modalidad !== 'TODOS') {
+                    if (modalidad === 'Virtual') {
+                        modalidadOk = item.modalidad === 'Virtual' || item.modalidad.includes('Virtual');
+                    } else if (modalidad === 'Presencial') {
+                        modalidadOk = item.modalidad.includes('Presencial') || item.modalidad.includes('En Línea');
+                    }
+                }
+                
                 return nivelOk && facultadOk && modalidadOk;
             });
         }
@@ -509,7 +506,6 @@
         function mostrarGraficos() {
             const filtrados = filtrarDatos();
 
-            // Gráfico por Nivel
             const niveles = {};
             filtrados.forEach(item => {
                 if (!niveles[item.nivel]) {
@@ -549,7 +545,6 @@
                 }
             });
 
-            // Gráfico por Facultad
             const facultades = {};
             filtrados.forEach(item => {
                 if (!facultades[item.facultad]) {
@@ -651,7 +646,6 @@
             mostrarProgramas();
         }
 
-        // Inicializar
         document.getElementById('fecha').textContent = new Date().toLocaleDateString('es-CR');
         actualizarDatos();
     </script>
