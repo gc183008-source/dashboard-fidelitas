@@ -1,110 +1,653 @@
-Attribute VB_Name = "ModuloDashboardFidelitas"
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Académico - Universidad Fidélitas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-Sub CrearDashboard()
-    Dim ws As Worksheet
-    Dim fila As Long
-    
-    On Error Resume Next
-    Application.ScreenUpdating = False
-    
-    ' Eliminar dashboard anterior
-    Set ws = ThisWorkbook.Sheets("DASHBOARD")
-    If Not ws Is Nothing Then
-        Application.DisplayAlerts = False
-        ws.Delete
-        Application.DisplayAlerts = True
-    End If
-    
-    Set ws = ThisWorkbook.Sheets.Add(Before:=ThisWorkbook.Sheets(1))
-    ws.Name = "DASHBOARD"
-    
-    ' TÍTULO
-    ws.Range("A1").Value = "DASHBOARD ACADÉMICO - UNIVERSIDAD FIDÉLITAS"
-    With ws.Range("A1")
-        .Font.Size = 14: .Font.Bold = True: .Font.Color = RGB(255, 255, 255)
-        .Interior.Color = RGB(31, 78, 120)
-        .HorizontalAlignment = xlCenter: .VerticalAlignment = xlCenter
-    End With
-    ws.Range("A1:F1").Merge: ws.Row(1).RowHeight = 25
-    
-    ' SUBTÍTULO
-    ws.Range("A2").Value = "Resumen Dinámico - Se actualiza automáticamente"
-    ws.Range("A2:F2").Merge
-    With ws.Range("A2"): .Font.Size = 10: .Font.Italic = True: End With
-    
-    ' ========== MÉTRICAS CLAVE ==========
-    ws.Range("A4").Value = "MÉTRICAS CLAVE"
-    Call FormatHeader(ws.Range("A4:F4"), RGB(112, 173, 71))
-    
-    ws.Range("A5").Value = "Total Programas"
-    ws.Range("B5").Value = "Total Cursos"
-    ws.Range("C5").Value = "Promedio Cursos"
-    ws.Range("D5").Value = "Costo Promedio"
-    ws.Range("E5").Value = "Costo Total"
-    Call FormatHeader(ws.Range("A5:E5"), RGB(31, 78, 120))
-    
-    ws.Range("A6").Formula = "=COUNTA(BACHILLERATOS!A2:A100)+COUNTA(LICENCIATURAS!A2:A100)"
-    ws.Range("B6").Formula = "=SUM(BACHILLERATOS!B:B)+SUM(LICENCIATURAS!B:B)"
-    ws.Range("C6").Formula = "=IFERROR(B6/A6,0)"
-    ws.Range("D6").Formula = "=IFERROR((AVERAGE(BACHILLERATOS!F:F)+AVERAGE(LICENCIATURAS!F:F))/2,0)"
-    ws.Range("E6").Formula = "=SUM(BACHILLERATOS!F:F)+SUM(LICENCIATURAS!F:F)"
-    
-    With ws.Range("A6:E6")
-        .Font.Bold = True: .Interior.Color = RGB(217, 225, 242)
-        .HorizontalAlignment = xlCenter: .Borders.LineStyle = xlContinuous
-    End With
-    ws.Range("A6:B6").NumberFormat = "#,##0"
-    ws.Range("C6").NumberFormat = "0.0"
-    ws.Range("D6:E6").NumberFormat = "₡#,##0"
-    
-    ' ========== FACULTADES ==========
-    ws.Range("A9").Value = "DISTRIBUCIÓN DE CURSOS POR FACULTAD"
-    Call FormatHeader(ws.Range("A9:F9"), RGB(112, 173, 71))
-    
-    ws.Range("A10").Value = "Facultad"
-    ws.Range("B10").Value = "Cursos Bach"
-    ws.Range("C10").Value = "Cursos Lic"
-    ws.Range("D10").Value = "Total Cursos"
-    Call FormatHeader(ws.Range("A10:D10"), RGB(31, 78, 120))
-    
-    Dim facultades As Variant
-    facultades = Array("Ingenierías", "Computación", "Ciencias Sociales")
-    
-    For fila = 0 To UBound(facultades)
-        ws.Cells(11 + fila, 1).Value = facultades(fila)
-        ws.Cells(11 + fila, 2).Formula = "=SUMIF(BACHILLERATOS!E:E,""" & facultades(fila) & """,BACHILLERATOS!B:B)"
-        ws.Cells(11 + fila, 3).Formula = "=SUMIF(LICENCIATURAS!E:E,""" & facultades(fila) & """,LICENCIATURAS!B:B)"
-        ws.Cells(11 + fila, 4).Formula = "=B" & (11 + fila) & "+C" & (11 + fila)
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1F4E78 0%, #70AD47 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .filtros {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .filtro-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filtro-group label {
+            font-weight: 600;
+            color: #1F4E78;
+            font-size: 14px;
+        }
+
+        .filtro-group select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+            transition: border-color 0.3s;
+        }
+
+        .filtro-group select:hover {
+            border-color: #70AD47;
+        }
+
+        .metricas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metrica-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-top: 4px solid #70AD47;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .metrica-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .metrica-valor {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1F4E78;
+            margin-bottom: 10px;
+        }
+
+        .metrica-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .graficos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .grafico-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .grafico-box h3 {
+            margin: 0 0 20px 0;
+            color: #1F4E78;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .top-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .top-container h3 {
+            margin: 0 0 20px 0;
+            color: #1F4E78;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .tabla-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #1F4E78;
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 12px 15px;
+            font-size: 14px;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        tbody tr:hover {
+            background: #f0f0f0;
+        }
+
+        .programas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .programa-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .programa-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .badge-tipo {
+            display: inline-block;
+            background: #1F4E78;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .badge-tipo.licenciatura {
+            background: #70AD47;
+        }
+
+        .facultad-badge {
+            display: inline-block;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .programa-nombre {
+            margin: 10px 0;
+            color: #1F4E78;
+            font-size: 14px;
+            font-weight: 600;
+            min-height: 40px;
+        }
+
+        .programa-detalle {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .modalidad-badge {
+            background: #FF9800;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 12px;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 40px;
+        }
+
+        .resumen-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .resumen-section h3 {
+            margin: 0 0 20px 0;
+            color: #1F4E78;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .graficos {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .programas-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 DASHBOARD ACADÉMICO - UNIVERSIDAD FIDÉLITAS</h1>
+        <p>Análisis interactivo de programas académicos</p>
+    </div>
+
+    <div class="container">
+        <!-- Filtros -->
+        <div class="filtros">
+            <div class="filtro-group">
+                <label>Nivel:</label>
+                <select id="filtroNivel" onchange="actualizarDatos()">
+                    <option value="TODOS">TODOS</option>
+                    <option value="Bachillerato">Bachilleratos</option>
+                    <option value="Licenciatura">Licenciaturas</option>
+                </select>
+            </div>
+            <div class="filtro-group">
+                <label>Facultad:</label>
+                <select id="filtroFacultad" onchange="actualizarDatos()">
+                    <option value="TODOS">TODOS</option>
+                    <option value="Ingenierías">Ingenierías y Arquitectura</option>
+                    <option value="Computación">Ciencias de la Computación</option>
+                    <option value="Sociales">Ciencias Sociales y Económicas</option>
+                </select>
+            </div>
+            <div class="filtro-group">
+                <label>Modalidad:</label>
+                <select id="filtroModalidad" onchange="actualizarDatos()">
+                    <option value="TODOS">TODOS</option>
+                    <option value="Presencial">Presencial/En Línea</option>
+                    <option value="Virtual">Virtual</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Métricas Clave -->
+        <div class="metricas" id="metricasContainer"></div>
+
+        <!-- Gráficos -->
+        <div class="graficos">
+            <div class="grafico-box">
+                <h3>Distribución por Nivel</h3>
+                <canvas id="chartNivel"></canvas>
+            </div>
+            <div class="grafico-box">
+                <h3>Distribución por Facultad</h3>
+                <canvas id="chartFacultad"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Programas -->
+        <div class="top-container">
+            <h3>🏆 Top 15 Programas Más Costosos</h3>
+            <div class="tabla-container">
+                <table id="topTable">
+                    <thead>
+                        <tr>
+                            <th>Posición</th>
+                            <th>Programa</th>
+                            <th>Nivel</th>
+                            <th>Facultad</th>
+                            <th>Cursos</th>
+                            <th>Costo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Listado Completo -->
+        <div class="resumen-section">
+            <h3>Listado de Programas Filtrados</h3>
+            <div class="programas-grid" id="programasGrid"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Última actualización: <span id="fecha"></span> | Total de programas: <span id="totalProgramasFooter">0</span></p>
+    </footer>
+
+    <script>
+        const datos = [
+            { programa: 'Ingenieria Ambiental', nivel: 'Bachillerato', cursos: 48, duracion: '9 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 9391270 },
+            { programa: 'Ingenieria Civil', nivel: 'Bachillerato', cursos: 59, duracion: '11 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 10793641 },
+            { programa: 'Ingenieria Electrica', nivel: 'Bachillerato', cursos: 47, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 8979428 },
+            { programa: 'Ingenieria Electromecanica', nivel: 'Bachillerato', cursos: 49, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 9233356 },
+            { programa: 'Ingenieria en Cadena de Suministros y Logistica', nivel: 'Bachillerato', cursos: 42, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 8075856 },
+            { programa: 'Ingenieria en Telecomunicaciones', nivel: 'Bachillerato', cursos: 48, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 9063428 },
+            { programa: 'Ingenieria Industrial', nivel: 'Bachillerato', cursos: 45, duracion: '9 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 9117846 },
+            { programa: 'Arquitectura Sostenible', nivel: 'Bachillerato', cursos: 62, duracion: '15 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 13075338 },
+            { programa: 'Ingenieria Mecatronica', nivel: 'Bachillerato', cursos: 47, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 9120928 },
+            { programa: 'Ingenieria en Ciencias de Datos', nivel: 'Bachillerato', cursos: 40, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 7929052 },
+            { programa: 'Ingenieria en Desarrollo de Software', nivel: 'Bachillerato', cursos: 39, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 7565186 },
+            { programa: 'Ingenieria en Seguridad informatica o ciberseguridad', nivel: 'Bachillerato', cursos: 43, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 8153124 },
+            { programa: 'Ingenieria en Sistemas de computacion', nivel: 'Bachillerato', cursos: 38, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 7478552 },
+            { programa: 'Administracion de Negocios', nivel: 'Bachillerato', cursos: 40, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 6979223 },
+            { programa: 'Contaduria Publica', nivel: 'Bachillerato', cursos: 39, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 6847723 },
+            { programa: 'Economia', nivel: 'Bachillerato', cursos: 40, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 7638713 },
+            { programa: 'Educacion Preescolar', nivel: 'Bachillerato', cursos: 41, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 5764663 },
+            { programa: 'Educacion Primaria', nivel: 'Bachillerato', cursos: 42, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 5764663 },
+            { programa: 'Enseñanza del Ingles', nivel: 'Bachillerato', cursos: 43, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 5882163 },
+            { programa: 'Derecho', nivel: 'Bachillerato', cursos: 37, duracion: '9 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 7110857 },
+            { programa: 'Diseño Publicitario', nivel: 'Bachillerato', cursos: 39, duracion: '9 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 7572285 },
+            { programa: 'Psicologia', nivel: 'Bachillerato', cursos: 44, duracion: '9 cuatrimestres', modalidad: 'Virtual', facultad: 'Sociales', costo: 7199616 },
+            { programa: 'Publicidad', nivel: 'Bachillerato', cursos: 42, duracion: '8 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 7174785 },
+            { programa: 'Arquitectura con enfasis en sostenibilidad', nivel: 'Licenciatura', cursos: 58, duracion: '15 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 13075338 },
+            { programa: 'Ingenieria Civil', nivel: 'Licenciatura', cursos: 55, duracion: '11 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 10793641 },
+            { programa: 'INGENIERÍA INDUSTRIAL CON ÉNFASIS EN CADENA DE SUMINISTROS Y LOGÍSTICA', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 1824928 },
+            { programa: 'INGENIERÍA AMBIENTAL', nivel: 'Licenciatura', cursos: 48, duracion: '9 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 9391270 },
+            { programa: 'INGENIERÍA INDUSTRIAL CON ÉNFASIS EN SERVICIOS Y MANUFACTURA MODERNA', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 1799928 },
+            { programa: 'INGENIERÍA ELÉCTRICA', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 1739428 },
+            { programa: 'INGENIERÍA ELECTROMECÁNICA', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 1740928 },
+            { programa: 'INGENIERÍA EMPRESARIAL', nivel: 'Licenciatura', cursos: 8, duracion: '2 cuatrimestres', modalidad: 'Virtual', facultad: 'Ingenierías', costo: 1563428 },
+            { programa: 'INGENIERÍA EN CADENA DE SUMINISTROS Y LOGÍSTICA', nivel: 'Licenciatura', cursos: 9, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 2012857 },
+            { programa: 'INGENIERÍA EN TELECOMUNICACIONES', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 1775428 },
+            { programa: 'INGENIERÍA INDUSTRIAL', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 1784000 },
+            { programa: 'INGENIERÍA INDUSTRIAL CON ÉNFASIS EN TRANSFORMACIÓN ORGANIZACIONAL', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 1698357 },
+            { programa: 'INGENIERÍA MECATRÓNICA', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Ingenierías', costo: 1733928 },
+            { programa: 'INGENIERÍA EN DESARROLLO DE SOFTWARE CON ÉNFASIS EN DESARROLLO MÓVIL', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 1905000 },
+            { programa: 'INGENIERÍA EN SISTEMAS DE COMPUTACIÓN CON ÉNFASIS EN CALIDAD DEL SOFTWARE', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 1815000 },
+            { programa: 'INGENIERÍA EN SISTEMAS DE COMPUTACIÓN', nivel: 'Licenciatura', cursos: 9, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Computación', costo: 1659000 },
+            { programa: 'ADMINISTRACIÓN DE NEGOCIOS CON ÉNFASIS EN CAPITAL HUMANO', nivel: 'Licenciatura', cursos: 9, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1550428 },
+            { programa: 'ADMINISTRACIÓN DE NEGOCIOS CON ÉNFASIS EN FINANZAS Y BANCA', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1670500 },
+            { programa: 'ADMINISTRACIÓN DE NEGOCIOS CON ÉNFASIS EN MERCADEO', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1702500 },
+            { programa: 'ECONOMÍA CON ÉNFASIS EN MERCADOS DE CAPITALES Y RIESGO', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1762345 },
+            { programa: 'ADMINISTRACIÓN DE NEGOCIOS CON ÉNFASIS EN EMPRENDIMIENTO', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1656000 },
+            { programa: 'CONTADURÍA PÚBLICA', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1668795 },
+            { programa: 'ENSEÑANZA DEL INGLÉS', nivel: 'Licenciatura', cursos: 9, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1389832 },
+            { programa: 'DISEÑO PUBLICITARIO CON ÉNFASIS EN GESTIÓN DE PROYECTOS', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1512757 },
+            { programa: 'DERECHO', nivel: 'Licenciatura', cursos: 14, duracion: '3 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1509500 },
+            { programa: 'PSICOLOGÍA', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Virtual', facultad: 'Sociales', costo: 1723000 },
+            { programa: 'CIENCIAS DE LA EDUCACIÓN PREESCOLAR ÉNFASIS EN ADMINISTRACIÓN DE CENTROS EDUCATIVOS', nivel: 'Licenciatura', cursos: 8, duracion: '3 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1864757 },
+            { programa: 'EDUCACIÓN PREESCOLAR CON ÉNFASIS EN DIFICULTADES DEL APRENDIZAJE', nivel: 'Licenciatura', cursos: 9, duracion: '3 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1756000 },
+            { programa: 'EDUCACIÓN PRIMARIA', nivel: 'Licenciatura', cursos: 9, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1272257 },
+            { programa: 'EDUCACIÓN PREESCOLAR CON ÉNFASIS EN INNOVACIÓN DE PROYECTOS EDUCATIVO', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1402088 },
+            { programa: 'ECONOMÍA', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1402088 },
+            { programa: 'LICENCIATURA EN CONTADURÍA PÚBLICA CON ÉNFASIS EN AUDITORÍA TRIBUTARIA', nivel: 'Licenciatura', cursos: 10, duracion: '2 Cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1632000 },
+            { programa: 'ADMINISTRACIÓN DE NEGOCIOS CON ÉNFASIS EN COMERCIO INTERNACIONAL', nivel: 'Licenciatura', cursos: 10, duracion: '2 cuatrimestres', modalidad: 'Presencial/En Línea', facultad: 'Sociales', costo: 1665000 },
+        ];
+
+        const coloresFacultad = { 
+            'Ingenierías': '#1F4E78', 
+            'Computación': '#70AD47', 
+            'Sociales': '#FF9800' 
+        };
         
-        With ws.Range(ws.Cells(11 + fila, 1), ws.Cells(11 + fila, 4))
-            .Borders.LineStyle = xlContinuous: .Font.Size = 10
-        End With
-        With ws.Range(ws.Cells(11 + fila, 2), ws.Cells(11 + fila, 4))
-            .HorizontalAlignment = xlCenter: .NumberFormat = "#,##0"
-        End With
-    Next fila
-    
-    ' ========== MODALIDADES (REALES DE FIDÉLITAS) ==========
-    ws.Range("A15").Value = "MODALIDADES DE ESTUDIO"
-    Call FormatHeader(ws.Range("A15:F15"), RGB(112, 173, 71))
-    
-    ws.Range("A16").Value = "Modalidad"
-    ws.Range("B16").Value = "Programas"
-    ws.Range("C16").Value = "Total Cursos"
-    Call FormatHeader(ws.Range("A16:C16"), RGB(31, 78, 120))
-    
-    ' MODALIDADES EXACTAS DE FIDÉLITAS
-    Dim modalidades As Variant, patrones As Variant
-    modalidades = Array("Presencial/Presencial en Linea", "Presencial/Virtual Asincronica", "Virtual")
-    patrones = Array("Presencial/Presencial en Linea*", "Presencial/Virtual Asincronica*", "Virtual*")
-    
-    For fila = 0 To UBound(modalidades)
-        ws.Cells(17 + fila, 1).Value = modalidades(fila)
-        ws.Cells(17 + fila, 2).Formula = "=COUNTIF(BACHILLERATOS!D:D,""" & patrones(fila) & """)+COUNTIF(LICENCIATURAS!D:D,""" & patrones(fila) & """)"
-        ws.Cells(17 + fila, 3).Formula = "=SUMIF(BACHILLERATOS!D:D,""" & patrones(fila) & """,BACHILLERATOS!B:B)+SUMIF(LICENCIATURAS!D:D,""" & patrones(fila) & """,LICENCIATURAS!B:B)"
-        
-        With ws.Range(ws.Cells(17 + fila, 1), ws.Cells(17 + fila, 3))
-            .Borders.LineStyle = xlContinuous: .Font.Size = 10
-        End With
-        With ws.Range(ws.Cells(17 + fila, 2), ws.Cells(17 + fila, 3))
-            .HorizontalAlignment = xlCenter: .NumberFormat = "#,
+        let chartNivel, chartFacultad;
+
+        function filtrarDatos() {
+            const nivel = document.getElementById('filtroNivel').value;
+            const facultad = document.getElementById('filtroFacultad').value;
+            const modalidad = document.getElementById('filtroModalidad').value;
+
+            return datos.filter(item => {
+                const nivelOk = nivel === 'TODOS' || item.nivel === nivel;
+                const facultadOk = facultad === 'TODOS' || item.facultad === facultad;
+                
+                let modalidadOk = true;
+                if (modalidad !== 'TODOS') {
+                    if (modalidad === 'Virtual') {
+                        modalidadOk = item.modalidad === 'Virtual' || item.modalidad.includes('Virtual');
+                    } else if (modalidad === 'Presencial') {
+                        modalidadOk = item.modalidad.includes('Presencial') || item.modalidad.includes('En Línea');
+                    }
+                }
+                
+                return nivelOk && facultadOk && modalidadOk;
+            });
+        }
+
+        function calcularMetricas() {
+            const filtrados = filtrarDatos();
+            const totalProgramas = filtrados.length;
+            const totalCursos = filtrados.reduce((sum, p) => sum + p.cursos, 0);
+            const costoTotal = filtrados.reduce((sum, p) => sum + p.costo, 0);
+            const promedioCursos = totalProgramas > 0 ? (totalCursos / totalProgramas).toFixed(1) : 0;
+            const costoPromedio = totalProgramas > 0 ? costoTotal / totalProgramas : 0;
+
+            return { totalProgramas, totalCursos, promedioCursos, costoPromedio, costoTotal };
+        }
+
+        function mostrarMetricas() {
+            const metricas = calcularMetricas();
+            const container = document.getElementById('metricasContainer');
+            container.innerHTML = `
+                <div class="metrica-card">
+                    <div class="metrica-valor">${metricas.totalProgramas}</div>
+                    <div class="metrica-label">Programas</div>
+                </div>
+                <div class="metrica-card">
+                    <div class="metrica-valor">${metricas.totalCursos}</div>
+                    <div class="metrica-label">Cursos Totales</div>
+                </div>
+                <div class="metrica-card">
+                    <div class="metrica-valor">${metricas.promedioCursos}</div>
+                    <div class="metrica-label">Promedio Cursos</div>
+                </div>
+                <div class="metrica-card">
+                    <div class="metrica-valor">₡${(metricas.costoPromedio / 1000000).toFixed(1)}M</div>
+                    <div class="metrica-label">Costo Promedio</div>
+                </div>
+            `;
+        }
+
+        function mostrarGraficos() {
+            const filtrados = filtrarDatos();
+
+            const niveles = {};
+            filtrados.forEach(item => {
+                if (!niveles[item.nivel]) {
+                    niveles[item.nivel] = { programas: 0, cursos: 0 };
+                }
+                niveles[item.nivel].programas++;
+                niveles[item.nivel].cursos += item.cursos;
+            });
+
+            const ctxNivel = document.getElementById('chartNivel').getContext('2d');
+            if (chartNivel) chartNivel.destroy();
+            chartNivel = new Chart(ctxNivel, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(niveles),
+                    datasets: [
+                        {
+                            label: 'Programas',
+                            data: Object.values(niveles).map(n => n.programas),
+                            backgroundColor: '#1F4E78',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Cursos',
+                            data: Object.values(niveles).map(n => n.cursos),
+                            backgroundColor: '#70AD47',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+
+            const facultades = {};
+            filtrados.forEach(item => {
+                if (!facultades[item.facultad]) {
+                    facultades[item.facultad] = { programas: 0, cursos: 0 };
+                }
+                facultades[item.facultad].programas++;
+                facultades[item.facultad].cursos += item.cursos;
+            });
+
+            const ctxFacultad = document.getElementById('chartFacultad').getContext('2d');
+            if (chartFacultad) chartFacultad.destroy();
+            chartFacultad = new Chart(ctxFacultad, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(facultades),
+                    datasets: [
+                        {
+                            label: 'Programas',
+                            data: Object.values(facultades).map(f => f.programas),
+                            backgroundColor: '#1F4E78',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Cursos',
+                            data: Object.values(facultades).map(f => f.cursos),
+                            backgroundColor: '#70AD47',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        }
+
+        function mostrarTop15() {
+            const filtrados = filtrarDatos();
+            const top15 = [...filtrados].sort((a, b) => b.costo - a.costo).slice(0, 15);
+            const tbody = document.getElementById('topTableBody');
+            tbody.innerHTML = '';
+
+            top15.forEach((item, idx) => {
+                const row = `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td>${item.programa}</td>
+                        <td><span class="badge-tipo ${item.nivel === 'Licenciatura' ? 'licenciatura' : ''}">${item.nivel}</span></td>
+                        <td>${item.facultad}</td>
+                        <td>${item.cursos}</td>
+                        <td>₡${item.costo.toLocaleString('es-CR')}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function mostrarProgramas() {
+            const filtrados = filtrarDatos();
+            const grid = document.getElementById('programasGrid');
+            document.getElementById('totalProgramasFooter').textContent = filtrados.length;
+            grid.innerHTML = '';
+
+            if (filtrados.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">No hay programas que coincidan con los filtros seleccionados</p>';
+                return;
+            }
+
+            filtrados.forEach(item => {
+                const card = `
+                    <div class="programa-card">
+                        <div>
+                            <span class="badge-tipo ${item.nivel === 'Licenciatura' ? 'licenciatura' : ''}">${item.nivel}</span>
+                        </div>
+                        <div class="facultad-badge" style="background-color: ${coloresFacultad[item.facultad]}">
+                            ${item.facultad}
+                        </div>
+                        <h4 class="programa-nombre">${item.programa}</h4>
+                        <div class="programa-detalle">
+                            <span>📚 ${item.cursos} cursos</span>
+                            <span>⏱️ ${item.duracion}</span>
+                            <span>💰 ₡${(item.costo / 1000000).toFixed(1)}M</span>
+                        </div>
+                        <div class="modalidad-badge">${item.modalidad}</div>
+                    </div>
+                `;
+                grid.innerHTML += card;
+            });
+        }
+
+        function actualizarDatos() {
+            mostrarMetricas();
+            mostrarGraficos();
+            mostrarTop15();
+            mostrarProgramas();
+        }
+
+        document.getElementById('fecha').textContent = new Date().toLocaleDateString('es-CR');
+        actualizarDatos();
+    </script>
+</body>
+</html>
